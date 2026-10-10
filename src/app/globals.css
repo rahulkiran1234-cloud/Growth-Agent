@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* Design tokens. Chart colours follow the validated reference palette (blue, orange, aqua, ...); status colours are
+   reserved for state and always ship with an icon and a label. Light theme only for now. */
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --line: rgba(11, 11, 11, 0.10);
+
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --s4: #eda100;
+  --s5: #e87ba4;
+  --blue-100: #cde2fb;
+  --blue-250: #86b6ef;
+  --blue-550: #1c5cab;
+  --blue-700: #0d366b;
+
+  --good: #0ca30c;
+  --good-ink: #006300;
+  --warn: #fab219;
+  --warn-ink: #7a4b00;
+  --serious: #ec835a;
+  --crit: #d03b3b;
+  --crit-ink: #a52a2a;
+
+  --side: #14181f;
+  --side-2: #1d232d;
+  --side-ink: #c3c8d2;
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink2: var(--ink2);
+  --color-muted: var(--muted);
+  --color-grid: var(--grid);
+  --color-line: var(--line);
+  --color-brand: var(--s1);
+  --color-brand-deep: var(--blue-550);
+  --color-good: var(--good-ink);
+  --color-crit: var(--crit-ink);
+  --color-warnink: var(--warn-ink);
+  --color-side: var(--side);
+  --color-side2: var(--side-2);
+  --color-side-ink: var(--side-ink);
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* recharts: keep axis text quiet and the tooltip on-brand */
+.recharts-cartesian-axis-tick-value { fill: var(--muted); font-size: 11px; }
+.recharts-surface:focus, .recharts-wrapper:focus { outline: none; }
+
+/* Report / PDF */
+@page { margin: 14mm; }
+@media print {
+  body { background: #ffffff !important; }
+  a { color: inherit; }
+  .no-print { display: none !important; }
+}

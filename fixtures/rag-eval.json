@@ -1,0 +1,92 @@
+[
+  {
+    "question": "Who promises a true-to-size fit and free returns when something doesn't fit?",
+    "regex": "true-to-size",
+    "competitor": "UrbanHaus"
+  },
+  {
+    "question": "What is the free shipping threshold at UrbanHaus?",
+    "regex": "Free shipping on all orders above Rs 999",
+    "competitor": "UrbanHaus"
+  },
+  {
+    "question": "Which competitor gives the longest warranty on lamps?",
+    "regex": "2-year warranty",
+    "competitor": "NestCo"
+  },
+  {
+    "question": "Can I get my order delivered the same day?",
+    "regex": "Same-day delivery",
+    "competitor": "NestCo"
+  },
+  {
+    "question": "How quickly will I get my money back after a return?",
+    "regex": "Refunds are issued in 5-7",
+    "competitor": "NestCo"
+  },
+  {
+    "question": "What do NestCo rugs cost?",
+    "regex": "rugs from Rs 1,199",
+    "competitor": "NestCo"
+  },
+  {
+    "question": "Does anyone use packaging without plastic?",
+    "regex": "plastic-free packaging",
+    "competitor": "NestCo"
+  },
+  {
+    "question": "How does the points reward scheme work?",
+    "regex": "1 point per Rs 100",
+    "competitor": "NestCo"
+  },
+  {
+    "question": "When is the Diwali sale?",
+    "regex": "Diwali sale runs 20-26 October",
+    "competitor": "NestCo"
+  },
+  {
+    "question": "How fast does WhatsApp support reply?",
+    "regex": "first response time is 4 minutes",
+    "competitor": "NestCo"
+  },
+  {
+    "question": "What do customers dislike about BrightNest products?",
+    "regex": "thin material",
+    "competitor": "BrightNest"
+  },
+  {
+    "question": "Which competitor has the highest rate of damaged parcels?",
+    "regex": "Damage claims run at 3.8%",
+    "competitor": "BrightNest"
+  },
+  {
+    "question": "Is there a discount for buying many units at once?",
+    "regex": "12% discount",
+    "competitor": "NestCo"
+  },
+  {
+    "question": "How often does BrightNest hold flash sales?",
+    "regex": "Flash sales run every Friday",
+    "competitor": "BrightNest"
+  },
+  {
+    "question": "Which competitor says it will always undercut the big marketplace price?",
+    "regex": "10% under the leading marketplace",
+    "competitor": "BrightNest"
+  },
+  {
+    "question": "What does the BrightNest listing comparable to SKU-02 cost?",
+    "regex": "comparable_to: SKU-02",
+    "competitor": "BrightNest"
+  },
+  {
+    "question": "Which competitor charges shipping below Rs 799?",
+    "regex": "Rs 799",
+    "competitor": "NestCo"
+  },
+  {
+    "question": "BrightNest Cushion 3 price",
+    "regex": "BrightNest Cushion 3",
+    "competitor": "BrightNest"
+  }
+]

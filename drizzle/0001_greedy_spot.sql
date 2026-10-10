@@ -1,0 +1,1 @@
+ALTER TABLE "action_plan_items" ADD COLUMN "week" integer;

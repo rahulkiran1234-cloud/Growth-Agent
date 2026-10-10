@@ -1,0 +1,43 @@
+snapshot_date,competitor_name,competitor_product_name,category,listed_price,discount_applied,rating,total_reviews,new_reviews,estimated_stock_status,badge_or_promo,data_type
+10-10-2025,COMP_A,HomePro Oil Mister 500ml,Kitchen,279,FALSE,4.2,421,1,Low Stock,Limited-time deal,synthetic_competitor_tracking
+10-10-2025,COMP_B,ChefEase Glass Oil Sprayer,Kitchen,229,FALSE,4.0,286,1,In Stock,None,synthetic_competitor_tracking
+10-10-2025,COMP_C,KitchenMate 2-in-1 Oil Dispenser,Kitchen,319,FALSE,4.4,694,1,In Stock,None,synthetic_competitor_tracking
+11-10-2025,COMP_A,HomePro Oil Mister 500ml,Kitchen,271,TRUE,4.2,421,0,Low Stock,Coupon 5%,synthetic_competitor_tracking
+11-10-2025,COMP_B,ChefEase Glass Oil Sprayer,Kitchen,229,FALSE,4.0,286,0,In Stock,None,synthetic_competitor_tracking
+11-10-2025,COMP_C,KitchenMate 2-in-1 Oil Dispenser,Kitchen,319,FALSE,4.4,694,0,In Stock,None,synthetic_competitor_tracking
+12-10-2025,COMP_A,HomePro Oil Mister 500ml,Kitchen,279,FALSE,4.2,423,2,Low Stock,None,synthetic_competitor_tracking
+12-10-2025,COMP_B,ChefEase Glass Oil Sprayer,Kitchen,229,FALSE,4.0,288,2,In Stock,None,synthetic_competitor_tracking
+12-10-2025,COMP_C,KitchenMate 2-in-1 Oil Dispenser,Kitchen,319,FALSE,4.4,694,0,In Stock,None,synthetic_competitor_tracking
+13-10-2025,COMP_A,HomePro Oil Mister 500ml,Kitchen,279,FALSE,4.2,424,1,Low Stock,None,synthetic_competitor_tracking
+13-10-2025,COMP_B,ChefEase Glass Oil Sprayer,Kitchen,229,FALSE,4.0,288,0,In Stock,None,synthetic_competitor_tracking
+13-10-2025,COMP_C,KitchenMate 2-in-1 Oil Dispenser,Kitchen,319,FALSE,4.4,694,0,In Stock,None,synthetic_competitor_tracking
+14-10-2025,COMP_A,HomePro Oil Mister 500ml,Kitchen,279,FALSE,4.2,428,4,Low Stock,None,synthetic_competitor_tracking
+14-10-2025,COMP_B,ChefEase Glass Oil Sprayer,Kitchen,229,FALSE,4.0,289,1,In Stock,None,synthetic_competitor_tracking
+14-10-2025,COMP_C,KitchenMate 2-in-1 Oil Dispenser,Kitchen,319,FALSE,4.4,694,0,In Stock,None,synthetic_competitor_tracking
+15-10-2025,COMP_A,HomePro Oil Mister 500ml,Kitchen,279,FALSE,4.2,429,1,Low Stock,None,synthetic_competitor_tracking
+15-10-2025,COMP_B,ChefEase Glass Oil Sprayer,Kitchen,229,FALSE,4.0,289,0,In Stock,None,synthetic_competitor_tracking
+15-10-2025,COMP_C,KitchenMate 2-in-1 Oil Dispenser,Kitchen,319,FALSE,4.4,698,4,In Stock,None,synthetic_competitor_tracking
+16-10-2025,COMP_A,HomePro Oil Mister 500ml,Kitchen,271,TRUE,4.2,429,0,Low Stock,Coupon 5%,synthetic_competitor_tracking
+16-10-2025,COMP_B,ChefEase Glass Oil Sprayer,Kitchen,229,FALSE,4.0,291,2,In Stock,None,synthetic_competitor_tracking
+16-10-2025,COMP_C,KitchenMate 2-in-1 Oil Dispenser,Kitchen,319,FALSE,4.4,698,0,In Stock,None,synthetic_competitor_tracking
+17-10-2025,COMP_A,HomePro Oil Mister 500ml,Kitchen,279,FALSE,4.2,430,1,Low Stock,None,synthetic_competitor_tracking
+17-10-2025,COMP_B,ChefEase Glass Oil Sprayer,Kitchen,222,TRUE,4.0,293,2,In Stock,Coupon 5%,synthetic_competitor_tracking
+17-10-2025,COMP_C,KitchenMate 2-in-1 Oil Dispenser,Kitchen,319,FALSE,4.4,698,0,In Stock,None,synthetic_competitor_tracking
+18-10-2025,COMP_A,HomePro Oil Mister 500ml,Kitchen,279,FALSE,4.2,434,4,Low Stock,None,synthetic_competitor_tracking
+18-10-2025,COMP_B,ChefEase Glass Oil Sprayer,Kitchen,222,TRUE,4.0,293,0,In Stock,Coupon 5%,synthetic_competitor_tracking
+18-10-2025,COMP_C,KitchenMate 2-in-1 Oil Dispenser,Kitchen,319,FALSE,4.4,699,1,In Stock,None,synthetic_competitor_tracking
+19-10-2025,COMP_A,HomePro Oil Mister 500ml,Kitchen,279,FALSE,4.2,434,0,Low Stock,None,synthetic_competitor_tracking
+19-10-2025,COMP_B,ChefEase Glass Oil Sprayer,Kitchen,222,TRUE,4.0,295,2,In Stock,Coupon 5%,synthetic_competitor_tracking
+19-10-2025,COMP_C,KitchenMate 2-in-1 Oil Dispenser,Kitchen,319,FALSE,4.4,700,1,Low Stock,None,synthetic_competitor_tracking
+20-10-2025,COMP_A,HomePro Oil Mister 500ml,Kitchen,279,FALSE,4.2,436,2,Low Stock,None,synthetic_competitor_tracking
+20-10-2025,COMP_B,ChefEase Glass Oil Sprayer,Kitchen,222,TRUE,4.0,296,1,In Stock,Coupon 5%,synthetic_competitor_tracking
+20-10-2025,COMP_C,KitchenMate 2-in-1 Oil Dispenser,Kitchen,319,FALSE,4.4,701,1,Low Stock,None,synthetic_competitor_tracking
+21-10-2025,COMP_A,HomePro Oil Mister 500ml,Kitchen,271,TRUE,4.2,436,0,Low Stock,Coupon 5%,synthetic_competitor_tracking
+21-10-2025,COMP_B,ChefEase Glass Oil Sprayer,Kitchen,222,TRUE,4.0,298,2,In Stock,Coupon 5%,synthetic_competitor_tracking
+21-10-2025,COMP_C,KitchenMate 2-in-1 Oil Dispenser,Kitchen,319,FALSE,4.4,703,2,In Stock,None,synthetic_competitor_tracking
+22-10-2025,COMP_A,HomePro Oil Mister 500ml,Kitchen,279,FALSE,4.2,437,1,Low Stock,None,synthetic_competitor_tracking
+22-10-2025,COMP_B,ChefEase Glass Oil Sprayer,Kitchen,222,TRUE,4.0,298,0,In Stock,Coupon 5%,synthetic_competitor_tracking
+22-10-2025,COMP_C,KitchenMate 2-in-1 Oil Dispenser,Kitchen,319,FALSE,4.4,704,1,In Stock,None,synthetic_competitor_tracking
+23-10-2025,COMP_A,HomePro Oil Mister 500ml,Kitchen,279,FALSE,4.2,439,2,Low Stock,None,synthetic_competitor_tracking
+23-10-2025,COMP_B,ChefEase Glass Oil Sprayer,Kitchen,222,TRUE,4.0,298,0,In Stock,Coupon 5%,synthetic_competitor_tracking
+23-10-2025,COMP_C,KitchenMate 2-in-1 Oil Dispenser,Kitchen,319,FALSE,4.4,704,0,In Stock,None,synthetic_competitor_tracking
