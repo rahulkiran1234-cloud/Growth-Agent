@@ -11,10 +11,14 @@ export type AdRecord = {
 
 export const DEFAULT_CAMPAIGN = "";
 
-/** True when headers look like an ads report, so it is not mistaken for sales (both have a date, SKU and sales column). */
+/**
+ * True when headers look like an advertising report, so it is not mistaken for sales (both have a date, a SKU and a sales
+ * column). Real ads reports carry clicks, impressions or campaigns. A daily sales summary that merely includes ad spend
+ * and ad orders columns is a sales file and must still be accepted as one.
+ */
 export function looksLikeAds(headers: string[]): boolean {
   const m = autoMap("ads", headers);
-  return !!m.spend && !!m.sku && !!m.date && ["impressions", "clicks", "campaign", "orders"].filter((f) => m[f]).length >= 1;
+  return !!m.spend && !!m.sku && !!m.date && ["impressions", "clicks", "campaign"].some((f) => m[f]);
 }
 
 const clean = (s: string | undefined) => (s ?? "").trim().replace(/\s+/g, " ");
@@ -23,7 +27,7 @@ const countOrZero = (raw: string | undefined) => { const v = parseNum(raw); retu
 export function processAds(rows: string[][], headers: string[], mapping: Mapping) {
   const idx = (f: string) => (mapping[f] ? headers.indexOf(mapping[f]!) : -1);
   const [iDate, iSku, iCamp, iSpend, iSales, iName, iImp, iClk, iOrd, iUnits] =
-    ["date", "sku", "campaign", "spend", "ad_sales", "product_name", "impressions", "clicks", "orders", "units"].map(idx);
+    ["date", "sku", "campaign", "spend", "ad_sales", "product_name", "impressions", "clicks", "ad_orders", "ad_units"].map(idx);
   const rep = newReport(rows.length);
   const order = detectDateOrder(rows.map((r) => r[iDate] ?? ""));
   const byKey = new Map<string, AdRecord>();

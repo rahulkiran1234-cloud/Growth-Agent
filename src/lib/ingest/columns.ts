@@ -39,12 +39,12 @@ export const FIELDS: Record<CsvKind, Record<string, FieldDef>> = {
     sku: { label: "SKU", required: true, synonyms: ["sku", "sellersku", "advertisedsku", "itemsku", "asin", "advertisedasin", "fsn", "productid", "listingid"] },
     campaign: { label: "Campaign (optional, defaults to one campaign)", required: false, synonyms: ["campaign", "campaignname", "campaignid", "adgroup", "adgroupname"] },
     spend: { label: "Ad spend", required: true, synonyms: ["spend", "adspend", "amountspent", "spendinr", "totalspend", "adcost", "totalcost"] },
-    ad_sales: { label: "Sales from ads", required: true, synonyms: ["sales", "adsales", "salesattributed", "attributedsales", "salesattributedinr", "adrevenue", "totalrevenue", "sales7d", "sales14d"] },
+    ad_sales: { label: "Sales from ads", required: true, synonyms: ["adsalesinr", "adsales", "sales", "salesattributed", "attributedsales", "salesattributedinr", "adrevenue", "totalrevenue", "sales7d", "sales14d"] },
     product_name: { label: "Product name (optional)", required: false, synonyms: ["productname", "title", "itemname", "advertisedproduct", "producttitle"] },
     impressions: { label: "Impressions (optional)", required: false, synonyms: ["impressions", "views", "adimpressions"] },
     clicks: { label: "Clicks (optional)", required: false, synonyms: ["clicks", "adclicks"] },
-    orders: { label: "Orders from ads (optional)", required: false, synonyms: ["orders", "ordersattributed", "attributedorders", "adorders", "purchases", "orders7d", "orders14d"] },
-    units: { label: "Units sold from ads (optional)", required: false, synonyms: ["units", "unitssold", "unitsordered", "adunits", "attributedunits"] },
+    ad_orders: { label: "Orders from ads (optional)", required: false, synonyms: ["adordersinr", "orders", "ordersattributed", "attributedorders", "adorders", "purchases", "orders7d", "orders14d"] },
+    ad_units: { label: "Units sold from ads (optional)", required: false, synonyms: ["adunitsinr", "unitssold", "adunitssold", "attributedunits"] }, // not bare "units": that is usually total units, not ad units
   },
 };
 
@@ -63,12 +63,10 @@ export function autoMap(kind: CsvKind, headers: string[]): Mapping {
     for (const [field, def] of Object.entries(fields)) {
       if (mapping[field]) continue;
       const syns = [norm(field), ...def.synonyms];
-      const hit = normed.find(
-        ({ h, n }) =>
-          !used.has(h) &&
-          n.length > 0 &&
-          (pass === 1 ? syns.includes(n) : syns.some((s) => s.length >= 4 && n.includes(s))),
-      );
+      // Pass 1 prefers the more specific name: the field's own name, then synonyms in the order listed ("ad_orders" before "orders").
+      const hit = pass === 1
+        ? syns.map((syn) => normed.find(({ h, n }) => !used.has(h) && n === syn)).find(Boolean)
+        : normed.find(({ h, n }) => !used.has(h) && n.length > 0 && syns.some((s) => s.length >= 4 && n.includes(s)));
       if (hit) {
         mapping[field] = hit.h;
         used.add(hit.h);

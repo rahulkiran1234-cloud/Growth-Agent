@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { autoMap, missingRequired } from "./columns";
 import { looksLikeAds, processAds } from "./ads-parse";
+import { processSales } from "./validate";
 
 // The header row the seller's own ads export uses.
 const HEADERS = ["date", "sku", "product_name", "campaign_name", "impressions", "clicks", "spend_inr", "cpc_inr", "orders_attributed", "units_sold", "sales_attributed_inr", "ctr_pct", "conversion_rate_pct", "acos_pct", "roas"];
@@ -12,7 +13,7 @@ describe("ads column detection", () => {
   it("maps the seller's own export without help", () => {
     expect(m).toMatchObject({
       date: "date", sku: "sku", campaign: "campaign_name", spend: "spend_inr", ad_sales: "sales_attributed_inr", product_name: "product_name",
-      impressions: "impressions", clicks: "clicks", orders: "orders_attributed", units: "units_sold",
+      impressions: "impressions", clicks: "clicks", ad_orders: "orders_attributed", ad_units: "units_sold",
     });
     expect(missingRequired("ads", m)).toEqual([]);
   });
@@ -27,6 +28,10 @@ describe("ads column detection", () => {
   it("reports what is missing", () => expect(missingRequired("ads", autoMap("ads", ["date", "sku", "clicks"]))).toEqual(["Ad spend", "Sales from ads"]));
   it("recognises an ads report, and not a sales file", () => {
     expect(looksLikeAds(HEADERS)).toBe(true);
+    // A daily sales summary that only carries ad spend / ad orders / ad sales columns is a sales file, not an ads report.
+    const salesWithAdColumns = ["date", "seller_id", "marketplace", "sku", "product_name", "category", "selling_price_inr", "sessions", "units_ordered", "orders", "sales_revenue_inr", "ad_spend_inr", "ad_orders", "ad_sales_inr", "returns_units", "unit_cost_inr", "estimated_marketplace_fees_inr", "estimated_profit_after_ads_inr", "data_type"];
+    expect(looksLikeAds(salesWithAdColumns)).toBe(false);
+    expect(looksLikeAds(["date", "sku", "campaign", "ad_spend", "ad_sales"])).toBe(true);
     expect(looksLikeAds(["order_date", "order_id", "sku", "units", "price", "revenue", "returned", "customer_id"])).toBe(false);
   });
 });
@@ -85,5 +90,41 @@ describe("processAds", () => {
     const r = processAds(rows, h, autoMap("ads", h));
     expect(r.records.every((x) => x.campaign === "")).toBe(true);
     expect(r.report.warnings.join(" ")).toMatch(/No campaign column/);
+  });
+});
+
+describe("a daily sales summary that also has ad columns", () => {
+  const H = ["date", "seller_id", "marketplace", "sku", "product_name", "category", "selling_price_inr", "sessions", "units_ordered", "orders", "sales_revenue_inr", "ad_spend_inr", "ad_orders", "ad_sales_inr", "returns_units", "unit_cost_inr", "estimated_marketplace_fees_inr", "estimated_profit_after_ads_inr", "data_type"];
+  it("maps for the Sales box", () => {
+    const m = autoMap("sales", H);
+    expect(m).toMatchObject({ order_date: "date", sku: "sku", units: "units_ordered", revenue: "sales_revenue_inr", price: "selling_price_inr" });
+    expect(missingRequired("sales", m)).toEqual([]);
+  });
+  it("can also be used in the Ads box, using its ad spend and ad sales columns", () => {
+    const m = autoMap("ads", H);
+    expect(m).toMatchObject({ date: "date", sku: "sku", spend: "ad_spend_inr", ad_sales: "ad_sales_inr", ad_orders: "ad_orders", product_name: "product_name" });
+    expect(missingRequired("ads", m)).toEqual([]);
+  });
+});
+
+describe("the daily sales summary loads in both boxes", () => {
+  const H = ["date", "seller_id", "marketplace", "sku", "product_name", "category", "selling_price_inr", "sessions", "units_ordered", "orders", "sales_revenue_inr", "ad_spend_inr", "ad_orders", "ad_sales_inr", "returns_units", "unit_cost_inr", "estimated_marketplace_fees_inr", "estimated_profit_after_ads_inr", "data_type"];
+  const rows = [
+    ["2025-10-10", "S1", "Amazon India", "OLV-OIL-500", "Sprayer", "Kitchen", "249", "203", "19", "19", "4731", "280.74", "9", "2241", "3", "112", "804.27", "1517.99", "synthetic_demo"],
+    ["2025-10-11", "S1", "Amazon India", "OLV-OIL-500", "Sprayer", "Kitchen", "249", "179", "14", "14", "3486", "353.91", "9", "2241", "0", "112", "592.62", "971.47", "synthetic_demo"],
+    ["2025-10-12", "S1", "Amazon India", "OLV-HOOK-10", "Hooks", "Home", "199", "267", "14", "14", "2786", "568.68", "11", "2189", "1", "62", "473.62", "875.7", "synthetic_demo"],
+  ];
+  it("as sales: revenue is the sales revenue column, and a returned-units count above 0 marks the day as having returns", () => {
+    const r = processSales(rows, H, autoMap("sales", H));
+    expect(r.report.rejected.count).toBe(0); // (3 rows are too few to pass the size checks, which is not what this test is about)
+    expect(r.records.map((x) => x.revenue)).toEqual([4731, 3486, 2786]);
+    expect(r.records.map((x) => x.units)).toEqual([19, 14, 14]);
+    expect(r.records.map((x) => x.returned)).toEqual([true, false, true]);
+  });
+  it("as ads: spend and sales come from the ad columns, never from total revenue", () => {
+    const r = processAds(rows, H, autoMap("ads", H));
+    expect(r.report.blockers).toEqual([]);
+    expect(r.records.map((x) => [x.spend, x.adSales, x.orders])).toEqual([[280.74, 2241, 9], [353.91, 2241, 9], [568.68, 2189, 11]]);
+    expect(r.records.every((x) => x.units === 0)).toBe(true); // no ad-units column, so total units are not borrowed
   });
 });

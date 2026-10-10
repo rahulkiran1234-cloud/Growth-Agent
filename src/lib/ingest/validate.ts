@@ -124,7 +124,9 @@ export function processSales(rows: string[][], headers: string[], mapping: Mappi
     const price = priceIn ?? revenue / units;
     if (revenue < 0 || price < 0) return reject(rep, line, "Negative revenue or price");
 
-    const returned = iRet >= 0 ? TRUE_SET.has((r[iRet] ?? "").trim().toLowerCase()) : false;
+    // A flag ("yes", "1", "returned") or a count of returned units (any number above 0, as in daily summaries).
+    const retRaw = iRet >= 0 ? (r[iRet] ?? "").trim().toLowerCase() : "";
+    const returned = iRet >= 0 ? TRUE_SET.has(retRaw) || (parseNum(retRaw) ?? 0) > 0 : false;
     if (iRet >= 0 && !(r[iRet] ?? "").trim()) nullRet++;
     const cust = iCust >= 0 ? (r[iCust] ?? "").trim() : "";
     if (iCust >= 0 && !cust) nullCust++;
