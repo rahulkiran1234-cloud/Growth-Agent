@@ -1,0 +1,24 @@
+# Render blueprint: New + > Blueprint, pick this repository, and Render reads this file.
+# The app runs as an always-on Node server, so the AI analysis and other long jobs run inside it (no extra setup).
+services:
+  - type: web
+    name: growth-agent
+    runtime: node
+    plan: free              # free servers sleep when idle: the first visit after a while is slow
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: AUTH_SECRET     # Render makes a random one; it signs report links and keeps them private
+        generateValue: true
+      - key: DATABASE_URL    # Supabase connection string (Session pooler). Paste it in the Render dashboard.
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: VOYAGE_API_KEY
+        sync: false
+      - key: APP_URL         # this service's own address, e.g. https://growth-agent.onrender.com (set after the first deploy)
+        sync: false
