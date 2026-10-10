@@ -1,0 +1,12 @@
+# Netlify detects Next.js and installs its runtime adapter, so no plugin is declared here.
+# The build first bundles the background function (AI analysis, review tagging, document indexing) that the app calls,
+# because those jobs outlast a normal request. Node is pinned because Next.js 16 needs a recent version.
+[build]
+  command = "npm run build:functions && npm run build"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "none"

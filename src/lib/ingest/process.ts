@@ -11,6 +11,7 @@ import { processTracker } from "./tracker-parse";
 import { rebuildTrackerDocs, storeTrackerSnapshots } from "./tracker";
 import { processAds } from "./ads-parse";
 import { storeAdRows } from "./ads";
+import { dispatch, type Job } from "@/lib/jobs";
 
 const setUpload = (id: string, v: Partial<typeof schema.uploads.$inferInsert>) =>
   db.update(schema.uploads).set(v).where(eq(schema.uploads.id, id));
@@ -87,8 +88,12 @@ export async function processCsvUpload(uploadId: string, mapping: Mapping) {
       db.insert(schema.reviews).values(b.map((r) => ({ projectId: up.projectId, reviewDate: r.reviewDate, sku: r.sku, rating: r.rating, body: r.body }))),
     );
     // Topic tagging takes a while: keep status "processing" and finish in the background.
-    await setUpload(uploadId, { status: "processing", stats: { ...report, tagging: "running" } });
-    startTagging(up.projectId, uploadId, report);
+    await setUpload(uploadId, { status: "processing", stats: { ...report, tagging: "running", taggingAt: new Date().toISOString() } });
+    try {
+      await dispatch({ kind: "tag", projectId: up.projectId, uploadId });
+    } catch (e) {
+      await setUpload(uploadId, { status: "ready", stats: { ...report, tagging: "failed", taggingError: (e as Error).message, warnings: [...report.warnings, "Topic tagging could not be started; keyword matching will be used instead."] } });
+    }
   } catch (e) {
     await setUpload(uploadId, { status: "failed", error: (e as Error).message });
   }
@@ -114,27 +119,51 @@ export async function processDocUpload(uploadId: string, competitorName: string,
   }
 }
 
-// In-process background job. A server restart kills it, so it is idempotent (only untagged
-// reviews are touched) and resumed from resumeStalledJobs() when the project is next opened.
+// Review tagging. It runs in the background function on Netlify, or in this process elsewhere. It is idempotent (only
+// untagged reviews are touched), so a run that was cut off is simply started again by resumeStalledJobs().
 const running = ((globalThis as unknown as { __tagging?: Set<string> }).__tagging ??= new Set<string>());
 
-export function startTagging(projectId: string, uploadId: string, report: Report) {
+/** One full tagging run for an upload; resolves when it is done (the Netlify function awaits it). */
+export async function runTaggingJob(projectId: string, uploadId: string) {
+  const [up] = await db.select().from(schema.uploads).where(eq(schema.uploads.id, uploadId));
+  const report = (up?.stats ?? {}) as Report;
+  try {
+    const t = await tagReviews(projectId);
+    await setUpload(uploadId, { status: "ready", stats: { ...report, tagging: "done", ...t } });
+  } catch (e) {
+    await setUpload(uploadId, {
+      status: "ready",
+      stats: { ...report, tagging: "failed", taggingError: (e as Error).message, warnings: [...(report.warnings ?? []), "Topic tagging failed; keyword matching will be used instead."] },
+    });
+  }
+}
+
+/** In-process starter (laptop or an always-on server). */
+export function startTaggingJob(projectId: string, uploadId: string) {
   if (running.has(projectId)) return;
   running.add(projectId);
-  void tagReviews(projectId)
-    .then((t) => setUpload(uploadId, { status: "ready", stats: { ...report, tagging: "done", ...t } }))
-    .catch((e) =>
-      setUpload(uploadId, {
-        status: "ready",
-        stats: { ...report, tagging: "failed", taggingError: (e as Error).message, warnings: [...report.warnings, "Topic tagging failed; keyword matching will be used instead."] },
-      }),
-    )
-    .finally(() => running.delete(projectId));
+  void runTaggingJob(projectId, uploadId).finally(() => running.delete(projectId));
 }
+
+const TAGGING_STALL_MS = 10 * 60_000;
 
 export async function resumeStalledJobs(projectId: string) {
   if (running.has(projectId)) return;
-  const stalled = await db.select().from(schema.uploads).where(eq(schema.uploads.projectId, projectId));
-  const up = stalled.find((u) => u.kind === "reviews" && u.status === "processing");
-  if (up) startTagging(projectId, up.id, up.stats as Report);
+  const all = await db.select().from(schema.uploads).where(eq(schema.uploads.projectId, projectId));
+  const up = all.find((u) => u.kind === "reviews" && u.status === "processing");
+  if (!up) return;
+  const stats = (up.stats ?? {}) as Report & { taggingAt?: string };
+  // Elsewhere the run lives in this process, so "not running here" means it died. On Netlify it lives in a function we
+  // cannot see: treat it as dead only after it has been silent for 10 minutes, then start it again.
+  if (process.env.NETLIFY === "true" && stats.taggingAt && Date.now() - Date.parse(stats.taggingAt) < TAGGING_STALL_MS) return;
+  await setUpload(up.id, { stats: { ...stats, taggingAt: new Date().toISOString() } });
+  await dispatch({ kind: "tag", projectId, uploadId: up.id }).catch(() => undefined);
+}
+
+/** Runs one queued job to completion. Used by the Netlify background function. */
+export async function runJob(job: Job) {
+  if (job.kind === "tag") return runTaggingJob(job.projectId, job.uploadId);
+  if (job.kind === "doc") return processDocUpload(job.uploadId, job.competitor, job.docDate);
+  const { runAnalysis } = await import("@/lib/agent/run");
+  return runAnalysis(job.analysisId, job.projectId);
 }

@@ -57,6 +57,23 @@ Two ways in, both on the Data page:
   - **How the advice works (all plain arithmetic, no model):** each SKU's break-even ACOS is its profit per unit divided by its selling price. The seller can type profit per unit for every SKU on the Ads screen; until then 30% of price is assumed and marked "assumed". Over the last 4 weeks of ads data: well under break-even and not worsening means spend more (+25% steps); a little over means spend less; far over means cut hard; lots of clicks that rarely buy means fix the listing first (price gap to a linked competitor and rating are shown as possible causes); a rating under 3.5 means pause; under 100 clicks means too little data. Money freed by cuts funds the raises, so the total never grows. The expected gain is a range that assumes extra spend returns only 30-60% of today's return. The chat analyst can answer questions about the advice from the same numbers. The same advice appears as an "Ad budget moves" card on the Action Plan screen (cuts in week 1, raises in week 2, re-check in week 4) and as an "Ad spend" section in the printable report and PDF. Both are written by code from the ads data, not by the AI, so the AI evidence checks do not apply to them; the report section uses today's ads data rather than a snapshot from analysis time.
 - **Competitor tracking data** (CSV or Excel with one row per competitor product per snapshot date, e.g. `snapshot_date, competitor_name, competitor_product_name, category, listed_price, discount_applied, rating, total_reviews, new_reviews, estimated_stock_status, badge_or_promo, data_type`). Any column names work; required are the date, competitor, product and price, the rest are optional. Dates like `10-10-2025` are read day-first unless the file proves month-first. Re-uploading adds new dates and updates matching ones, so you can keep appending fresh snapshots. The snapshots are stored in their own table and charted on the Competitors screen; the analysis reads short, code-written summary passages per product (price trend, discount days, promotions, stock, rating, new reviews) and quotes them exactly, so these facts go through the same evidence checks. A tracker file uploaded as a plain document is refused with a pointer to the right box. Files whose `data_type` says synthetic, sample or demo get a visible warning.
 
+## Deploying to Netlify
+
+The app is set up for Netlify with Supabase as the only backing service: pages and API routes run as Netlify functions, files and data live in Supabase Postgres, and the long jobs run in one Netlify **background function**.
+
+1. Push the repository to GitHub and, in Netlify, **Add new site, Import an existing project** and pick it. `netlify.toml` already holds the build command (`npm run build:functions && npm run build`) and Node 22.
+2. In **Site configuration, Environment variables** add (never commit these): `DATABASE_URL`, `ANTHROPIC_API_KEY`, `VOYAGE_API_KEY`, `AUTH_SECRET` (any long random string; it also signs background-job calls), `APP_URL` (the site's own address, e.g. `https://your-site.netlify.app`), plus the model and limit settings from `.env.example` if you change them. For password-reset email add the `SMTP_*` values and `MAIL_FROM`.
+3. Run the database migrations once from your laptop (`npm run db:migrate`) against the same `DATABASE_URL`.
+4. Deploy. Check `/api/health`, sign up, add a sample project and run an analysis.
+
+How the pieces behave there:
+- **Uploads** are stored in the `upload_files` table, not on disk, and are limited to about **5 MB** per file (Netlify caps a request at roughly 6 MB). Split bigger files by date range.
+- **The AI analysis, review tagging and document indexing** are started through `/.netlify/functions/job-background` (built from `netlify/job-entry.ts`). That function answers at once and can run up to 15 minutes. Every call is signed with `AUTH_SECRET` and expires after 5 minutes. If a run goes silent for 6 minutes it is started again from its first unfinished step, because finished steps are saved.
+- **PDF export** needs an installed Chrome, which Netlify does not have, so the report page offers the browser's own **Save as PDF** (the Print button) instead.
+- **Rate limits** are kept in memory per function instance, so they are a soft brake there, not a hard limit. The concurrent-analysis cap is counted in the database and holds.
+- The database pool is limited to 2 connections per instance on Netlify. If you see "too many connections", switch `DATABASE_URL` to Supabase's **Transaction pooler** string.
+- This has not been run on Netlify from here: the background function was bundled and exercised locally against the real database (signature checks and a job run), and everything else is covered by the unit and integration tests.
+
 ## Commands
 
 | Command | What it does | Cost |
@@ -90,6 +107,7 @@ Costs are estimates on the default Haiku 4.5 model (set `LLM_MODEL_STEPS` to try
 
 ## Known limitations
 
+- **Netlify is untested end to end.** See Deploying to Netlify for what was and was not verified.
 - **Accounts are basic.** Email and password only: no email verification at sign-up and no Google sign-in. Password reset needs SMTP settings to send real email. Fine for a case study; add verification before real use.
 - **In-process runner.** Analyses run inside the Node server (no queue); a restart interrupts a run, which then resumes from the last finished step when its page is opened. Needs a long-running Node host (Railway, Fly, Render, a VM): **not** Vercel-style serverless, where a 4-minute background job would be killed.
 - **Local file storage and in-memory rate limits** assume a single instance.

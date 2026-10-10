@@ -43,6 +43,13 @@
       "when": 1791619208905,
       "tag": "0005_fine_gambit",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791629667913,
+      "tag": "0006_omniscient_cobalt_man",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
+import { findBrowser } from "@/lib/pdf";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -10,22 +11,6 @@ import { guardAnalysis } from "@/lib/auth/access";
 import { makePdfToken } from "@/lib/auth/pdf-token";
 
 const run = promisify(execFile);
-
-function findBrowser(): string | null {
-  const candidates = [
-    process.env.PDF_BROWSER_PATH,
-    "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-    "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
-    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-    "/usr/bin/google-chrome",
-    "/usr/bin/chromium",
-    "/usr/bin/chromium-browser",
-  ];
-  return candidates.find((c): c is string => !!c && existsSync(c)) ?? null;
-}
 
 // Renders the report page with a headless Edge/Chrome and returns the PDF.
 export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {

@@ -7,6 +7,7 @@ import { buildReport } from "@/lib/report/build";
 import { readiness } from "@/lib/ingest/readiness";
 import { loadTracked } from "@/lib/ingest/tracker";
 import { loadAdDays, loadUnitProfit } from "@/lib/ingest/ads";
+import { pdfAvailable } from "@/lib/pdf";
 
 // Everything the workspace screens draw: chart-ready series straight from the seller's data (available as
 // soon as files are uploaded) plus the latest finished analysis, if there is one.
@@ -41,6 +42,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     // Capped so a long-running tracker file cannot make the page heavy: newest 400 snapshots of up to 80 products.
     tracker: tracked.slice(0, 80).map((p) => ({ ...p, series: p.series.slice(-400) })),
     ads: adData.days.length ? { days: adData.days.filter((d) => d.d >= cut), names: adData.names, campaigns: adData.campaigns, unitProfit } : null,
+    pdfExport: pdfAvailable(),
     runningAnalysisId: running?.id ?? null,
     analysisCount: analyses.length,
     lastUploadAt: last ? last.toISOString() : null,

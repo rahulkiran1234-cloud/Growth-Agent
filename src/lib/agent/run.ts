@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, max } from "drizzle-orm";
 import { db, schema } from "@/lib/db/client";
 import { env } from "@/lib/config/env";
 import { makeEmitter } from "@/lib/events";
@@ -15,13 +15,33 @@ const running = ((globalThis as unknown as { __runs?: Set<string> }).__runs ??= 
 export const isRunning = (analysisId: string) => running.has(analysisId);
 export const runningCount = () => running.size;
 
+// On Netlify the run lives in a background function this process cannot see, so "has it died?" is answered from the
+// stored events instead: no new event for 6 minutes means it stopped (a single AI step can be silent for a few minutes).
+export const STALL_MS = 6 * 60_000;
+
+/** True when a run marked "running" has actually stopped and should be started again from its first unfinished step. */
+export async function needsRestart(analysisId: string, now = Date.now()): Promise<boolean> {
+  if (process.env.NETLIFY !== "true") return !running.has(analysisId);
+  const [e] = await db.select({ at: max(schema.analysisEvents.createdAt) }).from(schema.analysisEvents).where(eq(schema.analysisEvents.analysisId, analysisId));
+  const [a] = await db.select({ startedAt: schema.analyses.startedAt }).from(schema.analyses).where(eq(schema.analyses.id, analysisId));
+  const last = e?.at ?? a?.startedAt;
+  return !!last && now - last.getTime() > STALL_MS;
+}
+
+/** Stamps the stream so a restart is not triggered again straight away (the browser ignores step 0 notes). */
+export async function markRestarted(analysisId: string) {
+  const em = await makeEmitter(analysisId);
+  await em.emit("note", { step: 0, text: "Restarted after the run stopped responding." });
+  await em.flush();
+}
+
 export function startAnalysis(analysisId: string, projectId: string) {
   if (running.has(analysisId)) return;
   running.add(analysisId);
   void runAnalysis(analysisId, projectId).finally(() => running.delete(analysisId));
 }
 
-async function runAnalysis(analysisId: string, projectId: string) {
+export async function runAnalysis(analysisId: string, projectId: string) {
   const cfg = env();
   const em = await makeEmitter(analysisId);
   let failedStep = 0;

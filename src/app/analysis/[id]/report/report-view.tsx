@@ -8,6 +8,7 @@ import PlanEditor from "./plan-editor";
 import ProgressCheck from "./progress-check";
 import PrintButton from "./print-button";
 import AdsSection from "./ads-section";
+import { pdfAvailable } from "@/lib/pdf";
 import { adAdvice } from "@/lib/ingest/ads";
 
 const anchor = (id: string) => `src-${id.replace(":", "-")}`;
@@ -79,7 +80,7 @@ export default async function ReportView({ id }: { id: string }) {
             <Link href={`/projects/${r.project.id}`} className="text-sm text-neutral-500 hover:underline">← {r.project.name}</Link>
             <div className="flex gap-2">
               <PrintButton />
-              <a href={`/api/analyses/${id}/report.pdf`} className="rounded bg-black px-3 py-1.5 text-sm text-white no-underline">Download PDF</a>
+              {pdfAvailable() && <a href={`/api/analyses/${id}/report.pdf`} className="rounded bg-black px-3 py-1.5 text-sm text-white no-underline">Download PDF</a>}
             </div>
           </div>
           <h1 className="mt-3 text-2xl font-bold">Growth report: {r.project.name}</h1>

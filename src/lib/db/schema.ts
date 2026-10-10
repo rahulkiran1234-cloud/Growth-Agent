@@ -5,6 +5,7 @@ import {
 import { sql } from "drizzle-orm";
 
 const tsvector = customType<{ data: string }>({ dataType: () => "tsvector" });
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({ dataType: () => "bytea" });
 
 // Single demo user for the MVP; every table hangs off a project.
 /** Accounts: email + password (scrypt hash). No email verification in this version. */
@@ -50,6 +51,13 @@ export const uploads = pgTable("uploads", {
   mapping: jsonb("mapping"),
   stats: jsonb("stats"),
   error: text("error"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+/** The original uploaded file (CSV, Excel, PDF, text), kept in Postgres so uploads survive on serverless hosts with no disk. */
+export const uploadFiles = pgTable("upload_files", {
+  key: text("key").primaryKey(),
+  data: bytea("data").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

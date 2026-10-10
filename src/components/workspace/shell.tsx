@@ -88,7 +88,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <button type="button" onClick={() => chat.setOpen(!chat.open)} className="rounded-lg border border-line bg-surface px-3 py-1.5 text-sm font-semibold hover:bg-[#f0efec]" aria-expanded={chat.open}>
               Ask the analyst
             </button>
-            {report && <a href={`/api/analyses/${report.analysis.id}/report.pdf`} className="rounded-lg bg-brand px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-deep">Export PDF</a>}
+            {report && <a href={data?.pdfExport ? `/api/analyses/${report.analysis.id}/report.pdf` : `/analysis/${report.analysis.id}/report`} className="rounded-lg bg-brand px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-deep">{data?.pdfExport ? "Export PDF" : "Open report (save as PDF)"}</a>}
           </div>
         </header>
         <main className="min-w-0 flex-1 px-4 pb-24 pt-4 md:px-6 md:pb-10">

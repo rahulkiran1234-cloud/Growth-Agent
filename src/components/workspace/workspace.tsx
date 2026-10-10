@@ -14,6 +14,8 @@ export type Payload = {
   tracker: TrackedProduct[];
   ads: { days: AdDay[]; names: Record<string, string>; campaigns: number; unitProfit: Record<string, number> } | null;
   readiness: { ready: boolean; problems: string[]; counts: { sales: number; reviews: number; chunks: number; competitors: number; salesDays: number } };
+  /** True when this server can make the PDF itself; otherwise the report page offers "Save as PDF" through the browser. */
+  pdfExport: boolean;
   runningAnalysisId: string | null;
   analysisCount: number;
   lastUploadAt: string | null;

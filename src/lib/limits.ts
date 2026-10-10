@@ -13,3 +13,10 @@ export async function freeUsage(projectId: string): Promise<{ used: number; limi
 
 export const FREE_LIMIT_MESSAGE = (limit: number) =>
   `You've used all ${limit} free analyses for this project. Unlimited analyses are part of the paid plan ($99/month), which isn't available in this demo.`;
+
+/** Analyses currently queued or running, counted in the database so every server instance sees the same number. */
+export async function activeAnalyses(): Promise<number> {
+  const [r] = await db.select({ n: sql<number>`count(*)::int` }).from(schema.analyses)
+    .where(and(inArray(schema.analyses.status, ["queued", "running"]), sql`${schema.analyses.startedAt} > now() - interval '30 minutes'`));
+  return r.n;
+}

@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db/client";
-import { saveFile, MAX_BYTES } from "@/lib/ingest/store";
+import { saveFile, MAX_BYTES, MAX_MB_LABEL } from "@/lib/ingest/store";
+import { dispatch } from "@/lib/jobs";
 import { readTable, describeMeta, type Table } from "@/lib/ingest/table";
 import { aiFillMapping } from "@/lib/ingest/ai-mapping";
 import { autoMap, CsvKind, FIELDS } from "@/lib/ingest/columns";
-import { processDocUpload } from "@/lib/ingest/process";
 import { looksLikeTracker } from "@/lib/ingest/tracker-parse";
 import { looksLikeAds } from "@/lib/ingest/ads-parse";
 import { limited } from "@/lib/rate-limit";
@@ -26,7 +26,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   if (!(file instanceof File) || file.size === 0) return Response.json({ error: "Choose a file to upload." }, { status: 400 });
   const ext = file.name.toLowerCase().split(".").pop();
   if (kind !== "competitor_doc" && ext !== "csv" && ext !== "xlsx" && ext !== "txt") return Response.json({ error: "Sales, reviews, ads and tracker files must be a .csv or .xlsx file." }, { status: 400 });
-  if (file.size > MAX_BYTES) return Response.json({ error: "File is larger than 20 MB." }, { status: 400 });
+  if (file.size > MAX_BYTES) return Response.json({ error: `File is larger than ${MAX_MB_LABEL}. Split it (for example by date range) and upload the parts.` }, { status: 400 });
   const buf = Buffer.from(await file.arrayBuffer());
 
   // Validate cheaply before saving anything.
@@ -55,7 +55,13 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   await db.update(schema.uploads).set({ storageKey: key }).where(eq(schema.uploads.id, up.id));
 
   if (kind === "competitor_doc") {
-    await processDocUpload(up.id, competitor, docDate || null); // fast enough to await
+    // Locally this is quick enough to wait for. On Netlify it runs in the background function and the page polls.
+    await db.update(schema.uploads).set({ status: "processing" }).where(eq(schema.uploads.id, up.id));
+    try {
+      await dispatch({ kind: "doc", uploadId: up.id, competitor, docDate: docDate || null }, { waitIfLocal: true });
+    } catch (e) {
+      await db.update(schema.uploads).set({ status: "failed", error: (e as Error).message }).where(eq(schema.uploads.id, up.id));
+    }
     const [done] = await db.select().from(schema.uploads).where(eq(schema.uploads.id, up.id));
     return Response.json({ upload: done });
   }

@@ -1,9 +1,10 @@
 import { z } from "zod";
 import { db, schema } from "@/lib/db/client";
 import { env } from "@/lib/config/env";
-import { runningCount, startAnalysis } from "@/lib/agent/run";
+import { dispatch } from "@/lib/jobs";
+import { eq } from "drizzle-orm";
 import { readiness } from "@/lib/ingest/readiness";
-import { FREE_LIMIT_MESSAGE, freeUsage } from "@/lib/limits";
+import { FREE_LIMIT_MESSAGE, activeAnalyses, freeUsage } from "@/lib/limits";
 import { limited } from "@/lib/rate-limit";
 import { guardProject } from "@/lib/auth/access";
 
@@ -29,11 +30,16 @@ export async function POST(req: Request) {
     return Response.json({ error: FREE_LIMIT_MESSAGE(usage.limit), code: "free_limit" }, { status: 402 });
   }
   // Protects the AI budget: only a few analyses run at once on this server.
-  if (runningCount() >= env().MAX_CONCURRENT_ANALYSES) {
+  if ((await activeAnalyses()) >= env().MAX_CONCURRENT_ANALYSES) {
     return Response.json({ error: "The server is busy with other analyses. Please try again in a minute.", code: "busy" }, { status: 503, headers: { "Retry-After": "60" } });
   }
 
   const [analysis] = await db.insert(schema.analyses).values({ projectId }).returning();
-  startAnalysis(analysis.id, projectId); // fire and forget
+  try {
+    await dispatch({ kind: "analysis", analysisId: analysis.id, projectId }); // returns at once; the run continues in the background
+  } catch (e) {
+    await db.update(schema.analyses).set({ status: "failed", error: (e as Error).message, finishedAt: new Date() }).where(eq(schema.analyses.id, analysis.id));
+    return Response.json({ error: `Could not start the analysis (${(e as Error).message.slice(0, 160)}).` }, { status: 502 });
+  }
   return Response.json({ id: analysis.id });
 }

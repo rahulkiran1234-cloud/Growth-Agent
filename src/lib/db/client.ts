@@ -7,7 +7,7 @@ const globalForDb = globalThis as unknown as { pool?: Pool };
 
 export const pool =
   globalForDb.pool ??
-  new Pool({ connectionString: env().DATABASE_URL, ssl: { rejectUnauthorized: false }, max: 5 });
+  new Pool({ connectionString: env().DATABASE_URL, ssl: { rejectUnauthorized: false }, max: process.env.NETLIFY === "true" ? 2 : 5 });
 if (process.env.NODE_ENV !== "production") globalForDb.pool = pool;
 
 export const db = drizzle(pool, { schema });

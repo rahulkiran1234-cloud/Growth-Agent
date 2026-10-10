@@ -10,6 +10,8 @@ import { readTable } from "./table";
 import { processAds } from "./ads-parse";
 import { processSales } from "./validate";
 import { adAdvice, loadAdDays, loadUnitProfit, storeAdRows } from "./ads";
+import { processCsvUpload } from "./process";
+import { saveFile } from "./store";
 
 let A = "", B = "", C = "";
 let adRecords: ReturnType<typeof processAds>["records"] = [];
@@ -27,6 +29,22 @@ beforeAll(async () => {
 afterAll(async () => {
   for (const id of [A, B, C]) if (id) await db.delete(schema.projects).where(eq(schema.projects.id, id));
   await pool.end();
+});
+
+describe("ads through the real upload path", () => {
+  it("imports an ads file from stored bytes, as the confirm step does", async () => {
+    const file = readFileSync("fixtures/ads_sample.csv");
+    const ads = await readTable(file, "ads.csv");
+    const [up] = await db.insert(schema.uploads).values({ projectId: B, kind: "ads", filename: "ads.csv", storageKey: "pending" }).returning();
+    const key = await saveFile(up.id, "ads.csv", file);
+    await db.update(schema.uploads).set({ storageKey: key }).where(eq(schema.uploads.id, up.id));
+    await processCsvUpload(up.id, autoMap("ads", ads.headers));
+    const [after] = await db.select().from(schema.uploads).where(eq(schema.uploads.id, up.id));
+    expect(after.error).toBeNull();
+    expect(after.status).toBe("ready");
+    expect((await db.select().from(schema.adDaily).where(eq(schema.adDaily.projectId, B))).length).toBe(1012);
+    await db.delete(schema.adDaily).where(eq(schema.adDaily.projectId, B)); // keep B empty for the isolation test below
+  });
 });
 
 describe("ads storage and advice", () => {
